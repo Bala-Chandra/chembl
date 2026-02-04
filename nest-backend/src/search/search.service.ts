@@ -168,19 +168,66 @@ export class SearchService {
   // ---------------------------------------------------------------------------
   // AUTOCOMPLETE (v1: structure only)
   // ---------------------------------------------------------------------------
-  async autocomplete(query: string, limit = 10): Promise<AutocompleteItem[]> {
+  async autocompleteStructure(
+    query: string,
+    limit = 10,
+  ): Promise<AutocompleteItem[]> {
     const sql = `
-      SELECT
-        chembl_id AS value,
-        chembl_id AS label
-      FROM molecule_dictionary
-      WHERE chembl_id ILIKE $1
-      ORDER BY chembl_id
-      LIMIT $2;
-    `;
+    SELECT
+      chembl_id AS value,
+      chembl_id AS label
+    FROM molecule_dictionary
+    WHERE chembl_id ILIKE $1
+    ORDER BY chembl_id
+    LIMIT $2;
+  `;
 
     const result = await this.pool.query<AutocompleteItem>(sql, [
       `${query}%`,
+      limit,
+    ]);
+
+    return result.rows;
+  }
+
+  async autocompleteTarget(
+    query: string,
+    limit = 10,
+  ): Promise<AutocompleteItem[]> {
+    const sql = `
+    SELECT
+      chembl_id AS value,
+      pref_name AS label
+    FROM target_dictionary
+    WHERE pref_name ILIKE $1
+    ORDER BY pref_name
+    LIMIT $2;
+  `;
+
+    const result = await this.pool.query<AutocompleteItem>(sql, [
+      `%${query}%`,
+      limit,
+    ]);
+
+    return result.rows;
+  }
+
+  async autocompleteAssay(
+    query: string,
+    limit = 10,
+  ): Promise<AutocompleteItem[]> {
+    const sql = `
+    SELECT
+      assay_id::text AS value,
+      description AS label
+    FROM assays
+    WHERE description ILIKE $1
+    ORDER BY assay_id
+    LIMIT $2;
+  `;
+
+    const result = await this.pool.query<AutocompleteItem>(sql, [
+      `%${query}%`,
       limit,
     ]);
 

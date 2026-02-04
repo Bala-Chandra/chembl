@@ -31,7 +31,22 @@ export class SearchController {
     @Query('category') category: SearchCategory,
     @Query('q') query: string,
   ) {
-    // v1: ignore category, structure-only
-    return await this.searchService.autocomplete(query);
+    if (!query || query.length < 3) {
+      return [];
+    }
+
+    switch (category) {
+      case 'structure':
+        return await this.searchService.autocompleteStructure(query);
+
+      case 'target':
+        return await this.searchService.autocompleteTarget(query);
+
+      case 'assay':
+        return await this.searchService.autocompleteAssay(query);
+
+      default:
+        return [];
+    }
   }
 }
