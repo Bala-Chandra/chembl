@@ -1,11 +1,12 @@
 import { Routes, Route } from 'react-router-dom';
 import SearchPage from './pages/SearchPage';
+import ResultsPage from './pages/ResulstsPage';
 
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<SearchPage />} />
-      {/* results page comes next */}
+      <Route path="/results" element={<ResultsPage/>} />
     </Routes>
   );
 }
