@@ -1,7 +1,7 @@
 import type { ColDef } from 'ag-grid-community';
 
 export const structureColumns: ColDef[] = [
-  { field: 'molecule_chembl_id', headerName: 'ChEMBL ID' },
+  { field: 'chembl_id', headerName: 'ChEMBL ID' },
   { field: 'pref_name', headerName: 'Name' },
   { field: 'canonical_smiles', headerName: 'SMILES' },
   { field: 'max_phase', headerName: 'Max Phase' },

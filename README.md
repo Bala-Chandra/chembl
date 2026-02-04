@@ -3,3 +3,6 @@ npm install axios lodash ag-grid-community ag-grid-react
 
 npm install lodash.debounce
 npm install --save-dev @types/lodash.debounce
+npm install pg
+
+npm install --save-dev @types/pg

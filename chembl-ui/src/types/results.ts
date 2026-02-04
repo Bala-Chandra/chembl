@@ -1,5 +1,5 @@
 export interface StructureRow {
-  molecule_chembl_id: string;
+  chembl_id: string;
   pref_name: string | null;
   canonical_smiles: string;
   max_phase: number | null;
