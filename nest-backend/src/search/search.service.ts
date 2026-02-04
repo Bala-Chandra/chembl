@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Pool, PoolClient } from 'pg';
 import { randomUUID } from 'crypto';
-import type { AutocompleteItem } from './types/search';
+import type { AutocompleteItem } from './types/search.types';
 /**
  * Returned to frontend to enable Search button
  */
