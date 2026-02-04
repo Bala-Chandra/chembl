@@ -3,8 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import AutocompleteInput from '../components/AutocompleteInput';
 import SearchCategorySelect from '../components/SearchCategorySelect';
 import SearchCounts from '../components/SearchCounts';
-import type { SearchCategory, SearchCounts as Counts, AutocompleteItem } from '../types/search';
-import { fetchCounts } from '../api/searchApi';
+import type {
+  SearchCategory,
+  SearchCounts as Counts,
+  AutocompleteItem,
+} from '../types/search';
+import { fetchCounts, createSearchSession } from '../api/searchApi';
 
 export default function SearchPage() {
   const [category, setCategory] = useState<SearchCategory>('structure');
@@ -15,8 +19,15 @@ export default function SearchPage() {
 
   const onSelect = async (item: AutocompleteItem) => {
     setSelectedValue(item.value);
-    const res = await fetchCounts(category, item.value);
+    const res = await fetchCounts(item.value);
     setCounts(res.data);
+  };
+
+  const onSearch = async () => {
+    if (!selectedValue) return;
+
+    await createSearchSession(selectedValue); // sets HTTP-only cookie
+    navigate('/results');
   };
 
   const enableSearch =
@@ -44,11 +55,7 @@ export default function SearchPage() {
 
       <button
         disabled={!enableSearch}
-        onClick={() =>
-          navigate('/results', {
-            state: { category, value: selectedValue },
-          })
-        }
+        onClick={onSearch}
       >
         Search
       </button>

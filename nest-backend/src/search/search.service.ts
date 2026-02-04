@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Pool, PoolClient } from 'pg';
 import { randomUUID } from 'crypto';
-
+import type { AutocompleteItem } from './types/search';
 /**
  * Returned to frontend to enable Search button
  */
@@ -164,5 +164,26 @@ export class SearchService {
       client.release();
       this.sessions.delete(sessionId);
     }
+  }
+  // ---------------------------------------------------------------------------
+  // AUTOCOMPLETE (v1: structure only)
+  // ---------------------------------------------------------------------------
+  async autocomplete(query: string, limit = 10): Promise<AutocompleteItem[]> {
+    const sql = `
+      SELECT
+        chembl_id AS value,
+        chembl_id AS label
+      FROM molecule_dictionary
+      WHERE chembl_id ILIKE $1
+      ORDER BY chembl_id
+      LIMIT $2;
+    `;
+
+    const result = await this.pool.query<AutocompleteItem>(sql, [
+      `${query}%`,
+      limit,
+    ]);
+
+    return result.rows;
   }
 }

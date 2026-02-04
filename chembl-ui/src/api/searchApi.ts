@@ -1,25 +1,30 @@
-import axios from 'axios';
-import type { SearchCategory } from '../types/search';
+import { api } from './axios';
+import type { SearchCategory, AutocompleteItem } from '../types/search';
 
-const api = axios.create({
-  baseURL: 'http://localhost:3000', // NestJS
-});
+// -----------------------------
+// COUNTS
+// -----------------------------
+export const fetchCounts = (value: string) =>
+  api.post('/search/counts', { value });
 
+// -----------------------------
+// CREATE SEARCH SESSION
+// -----------------------------
+export const createSearchSession = (value: string) =>
+  api.post('/search/session', { value });
+
+// -----------------------------
+// AUTOCOMPLETE
+// -----------------------------
 export const fetchAutocomplete = (
   category: SearchCategory,
   query: string,
-  signal: AbortSignal
+  signal?: AbortSignal
 ) =>
-  api.get(`/autocomplete/${category}`, {
-    params: { q: query },
+  api.get<AutocompleteItem[]>('/search/autocomplete', {
+    params: {
+      category,
+      q: query,
+    },
     signal,
-  });
-
-export const fetchCounts = (
-  category: SearchCategory,
-  value: string
-) =>
-  api.post('/search/counts', {
-    category,
-    value,
   });

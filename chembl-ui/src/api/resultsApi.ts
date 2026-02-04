@@ -1,18 +1,11 @@
-import axios from 'axios';
-
-const api = axios.create({
-  baseURL: 'http://localhost:3000',
-});
-
-export interface ResultsRequest {
-  category: string;
-  value: string;
-  page: number;
-  pageSize: number;
-}
+import { api } from './axios';
 
 export const fetchResults = (
   type: 'structures' | 'documents' | 'assays' | 'activities',
-  payload: ResultsRequest
+  page: number,
+  pageSize: number
 ) =>
-  api.post(`/results/${type}`, payload);
+  api.post(`/results/${type}`, {
+    page,
+    pageSize,
+  });
