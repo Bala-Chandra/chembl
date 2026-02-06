@@ -1,0 +1,41 @@
+.layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.header {
+  height: 64px;
+  padding: 0 24px;
+
+  display: flex;
+  align-items: center;
+
+  background: #0f172a;
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* Footer */
+.footer {
+  height: 48px;
+  padding: 0 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 13px;
+}
+
+/* Main content area */
+.main {
+  flex: 1; /* this is the key */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

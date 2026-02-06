@@ -9,6 +9,7 @@ import type {
   AutocompleteItem,
 } from '../types/search';
 import { fetchCounts, createSearchSession } from '../api/searchApi';
+import styles from './SearchPage.module.css';
 
 export default function SearchPage() {
   const [category, setCategory] = useState<SearchCategory>('structure');
@@ -19,46 +20,47 @@ export default function SearchPage() {
 
   const onSelect = async (item: AutocompleteItem) => {
     setSelectedValue(item.value);
-    const res = await fetchCounts(item.value);
+
+    const res = await fetchCounts(category, item.value);
     setCounts(res.data);
   };
 
   const onSearch = async () => {
     if (!selectedValue) return;
 
-    await createSearchSession(selectedValue); // sets HTTP-only cookie
+    await createSearchSession(selectedValue);
     navigate('/results');
   };
 
-  const enableSearch =
-    counts && Object.values(counts).some(v => v > 0);
+  const enableSearch = Boolean(selectedValue);
 
   return (
-    <div className="search-page">
-      <h2>ChEMBL Search</h2>
+    <div className={styles.container}>
+      <div className={styles.bar}>
+        <SearchCategorySelect
+          value={category}
+          onChange={v => {
+            setCategory(v);
+            setSelectedValue(null);
+            setCounts(null);
+          }}
+        />
 
-      <SearchCategorySelect
-        value={category}
-        onChange={v => {
-          setCategory(v);
-          setCounts(null);
-          setSelectedValue(null);
-        }}
-      />
+        <AutocompleteInput
+          category={category}
+          onSelect={onSelect}
+        />
 
-      <AutocompleteInput
-        category={category}
-        onSelect={onSelect}
-      />
+        <button
+          className={styles.searchBtn}
+          disabled={!enableSearch}
+          onClick={onSearch}
+        >
+          🔍 Search
+        </button>
+      </div>
 
       {counts && <SearchCounts counts={counts} />}
-
-      <button
-        disabled={!enableSearch}
-        onClick={onSearch}
-      >
-        Search
-      </button>
     </div>
   );
 }
