@@ -11,7 +11,7 @@ export default function StructuresGrid() {
 
   useEffect(() => {
     fetchResults('structures', 1, 25).then(res => {
-      setRows(res.data.rows); // 🔴 THIS WAS MISSING
+      setRows(res.data); // 🔴 THIS WAS MISSING
       setLoading(false);
     });
   }, []);
