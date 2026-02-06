@@ -242,9 +242,9 @@ export class SearchService {
     const sql = `
     SELECT
       doc_id::text AS value,
-      pubmed_id    AS label
+      pubmed_id::text    AS label
     FROM docs
-    WHERE pubmed_id ILIKE $1
+    WHERE pubmed_id::text ILIKE $1
     ORDER BY pubmed_id
     LIMIT $2;
   `;

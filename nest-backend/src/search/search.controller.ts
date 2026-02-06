@@ -1,4 +1,12 @@
-import { Body, Controller, Post, Res, Get, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  Res,
+  Get,
+  Query,
+  BadRequestException,
+} from '@nestjs/common';
 import type { Response } from 'express';
 import { SearchService } from './search.service';
 import type {
@@ -6,6 +14,13 @@ import type {
   SearchCounts,
   AutocompleteItem,
 } from './types/search.types';
+
+const VALID_CATEGORIES: SearchCategory[] = [
+  'structure',
+  'target',
+  'assay',
+  'reference',
+];
 
 @Controller('search')
 export class SearchController {
@@ -36,11 +51,19 @@ export class SearchController {
   // ------------------------------------------------------------------
   // COUNTS
   // ------------------------------------------------------------------
+
   @Post('counts')
   async counts(
-    @Body() body: { category: SearchCategory; value: string },
+    @Body() body: { category: string; value: string },
   ): Promise<SearchCounts> {
-    return this.searchService.getCounts(body.category, body.value);
+    if (!VALID_CATEGORIES.includes(body.category as SearchCategory)) {
+      throw new BadRequestException('Invalid search category');
+    }
+
+    return this.searchService.getCounts(
+      body.category as SearchCategory,
+      body.value,
+    );
   }
 
   // ------------------------------------------------------------------
