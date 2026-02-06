@@ -4,6 +4,9 @@ import type { SearchCategory, AutocompleteItem } from '../types/search';
 // -----------------------------
 // COUNTS
 // -----------------------------
+export const fetchDefaultCounts = () =>
+  api.get('/search/counts/default');
+
 export const fetchCounts = (category:SearchCategory, value: string, ) =>
   api.post('/search/counts', { category, value });
 

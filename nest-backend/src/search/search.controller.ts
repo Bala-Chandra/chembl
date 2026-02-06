@@ -52,6 +52,11 @@ export class SearchController {
   // COUNTS
   // ------------------------------------------------------------------
 
+  @Get('counts/default')
+  async defaultCounts(): Promise<SearchCounts> {
+    return this.searchService.getDefaultCounts();
+  }
+
   @Post('counts')
   async counts(
     @Body() body: { category: string; value: string },

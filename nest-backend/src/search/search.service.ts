@@ -25,6 +25,18 @@ export class SearchService {
   // ---------------------------------------------------------------------------
   // 1️⃣ COUNTS (stateless, cheap, safe)
   // ---------------------------------------------------------------------------
+  async getDefaultCounts(): Promise<SearchCounts> {
+    const sql = `
+    SELECT
+      (SELECT COUNT(*) FROM molecule_dictionary)::int AS structures,
+      (SELECT COUNT(*) FROM docs)::int                AS documents,
+      (SELECT COUNT(*) FROM assays)::int              AS assays,
+      (SELECT COUNT(*) FROM activities)::int          AS activities;
+  `;
+
+    const result = await this.pool.query<SearchCounts>(sql);
+    return result.rows[0];
+  }
 
   async getCounts(
     category: SearchCategory,

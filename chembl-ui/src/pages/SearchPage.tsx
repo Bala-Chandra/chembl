@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AutocompleteInput from '../components/AutocompleteInput';
 import SearchCategorySelect from '../components/SearchCategorySelect';
@@ -8,13 +8,20 @@ import type {
   SearchCounts as Counts,
   AutocompleteItem,
 } from '../types/search';
-import { fetchCounts, createSearchSession } from '../api/searchApi';
+import { fetchCounts, createSearchSession, fetchDefaultCounts } from '../api/searchApi';
 import styles from './SearchPage.module.css';
 
 export default function SearchPage() {
   const [category, setCategory] = useState<SearchCategory>('structure');
   const [selectedValue, setSelectedValue] = useState<string | null>(null);
   const [counts, setCounts] = useState<Counts | null>(null);
+
+  useEffect(() => {
+  fetchDefaultCounts()
+    .then(res => setCounts(res.data))
+    .catch(() => setCounts(null));
+}, []);
+
 
   const navigate = useNavigate();
 
