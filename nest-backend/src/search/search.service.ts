@@ -1,16 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { Pool, PoolClient } from 'pg';
 import { randomUUID } from 'crypto';
-import type { AutocompleteItem } from './types/search.types';
+import type {
+  AutocompleteItem,
+  SearchCategory,
+  SearchCounts,
+} from './types/search.types';
 /**
  * Returned to frontend to enable Search button
  */
-export interface SearchCounts {
-  structures: number;
-  documents: number;
-  assays: number;
-  activities: number;
-}
 
 /**
  * In-memory map:
@@ -28,20 +26,23 @@ export class SearchService {
   // 1️⃣ COUNTS (stateless, cheap, safe)
   // ---------------------------------------------------------------------------
 
-  async getCounts(chemblId: string): Promise<SearchCounts> {
-    const sql = `
-      SELECT
-        COUNT(DISTINCT md.molregno)::int  AS structures,
-        COUNT(DISTINCT d.doc_id)::int     AS documents,
-        COUNT(DISTINCT a.assay_id)::int   AS assays,
-        COUNT(a.activity_id)::int         AS activities
-      FROM molecule_dictionary md
-      LEFT JOIN activities a ON md.molregno = a.molregno
-      LEFT JOIN docs d ON a.doc_id = d.doc_id
-      WHERE md.chembl_id = $1;
-    `;
+  async getCounts(
+    category: SearchCategory,
+    value: string,
+  ): Promise<SearchCounts> {
+    const whereClause = this.resolveActivityFilter(category);
 
-    const result = await this.pool.query<SearchCounts>(sql, [chemblId]);
+    const sql = `
+    SELECT
+      COUNT(DISTINCT a.molregno)::int  AS structures,
+      COUNT(DISTINCT a.doc_id)::int    AS documents,
+      COUNT(DISTINCT a.assay_id)::int  AS assays,
+      COUNT(a.activity_id)::int        AS activities
+    FROM activities a
+    WHERE ${whereClause};
+  `;
+
+    const result = await this.pool.query<SearchCounts>(sql, [value]);
 
     return result.rows[0];
   }
@@ -232,5 +233,57 @@ export class SearchService {
     ]);
 
     return result.rows;
+  }
+
+  async autocompleteReference(
+    query: string,
+    limit = 10,
+  ): Promise<AutocompleteItem[]> {
+    const sql = `
+    SELECT
+      doc_id::text AS value,
+      pubmed_id    AS label
+    FROM docs
+    WHERE pubmed_id ILIKE $1
+    ORDER BY pubmed_id
+    LIMIT $2;
+  `;
+
+    const result = await this.pool.query<AutocompleteItem>(sql, [
+      `${query}%`,
+      limit,
+    ]);
+
+    return result.rows;
+  }
+
+  private resolveActivityFilter(category: SearchCategory): string {
+    switch (category) {
+      case 'structure':
+        return `a.molregno IN (
+        SELECT molregno
+        FROM molecule_dictionary
+        WHERE chembl_id = $1
+      )`;
+
+      case 'target':
+        return `a.assay_id IN (
+        SELECT ta.assay_id
+        FROM target_dictionary td
+        JOIN target_components tc ON td.tid = tc.tid
+        JOIN component_sequences cs ON tc.component_id = cs.component_id
+        JOIN target_assays ta ON ta.tid = td.tid
+        WHERE td.chembl_id = $1
+      )`;
+
+      case 'assay':
+        return `a.assay_id = $1::int`;
+
+      case 'reference':
+        return `a.doc_id = $1::int`;
+
+      default:
+        throw new Error('Unsupported category');
+    }
   }
 }
