@@ -35,7 +35,7 @@ export default function SearchPage() {
   const onSearch = async () => {
     if (!selectedValue) return;
 
-    await createSearchSession(selectedValue);
+    await createSearchSession(category, selectedValue);
     navigate('/results');
   };
 

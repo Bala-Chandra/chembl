@@ -1,22 +1,24 @@
+// src/grids/AssaysGrid.tsx
 import { useEffect, useState } from 'react';
 import ResultsGrid from './ResultsGrid';
-import { fetchResults } from '../api/resultsApi';
 import { ASSAYS_COLUMNS } from './columns/assays.columns';
+import type { AssayRow } from '../types/rows/assay-row.type';
+import { fetchResults } from '../api/resultsApi';
 
 export default function AssaysGrid() {
-  const [rowData, setRowData] = useState([]);
+  const [rows, setRows] = useState<AssayRow[]>([]);
 
   useEffect(() => {
-    fetchResults('assays').then(res => {
-      setRowData(res.data);
+    fetchResults('assays', 1, 25).then(res => {
+      setRows(res.data.rows);
     });
   }, []);
 
   return (
-    <ResultsGrid
+    <ResultsGrid<AssayRow>
       columnDefs={ASSAYS_COLUMNS}
-      rowData={rowData}
-       storageKey="chembl:assays:columns"
+      rowData={rows}
+      storageKey="assays-grid"
     />
   );
 }

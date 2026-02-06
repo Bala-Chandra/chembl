@@ -1,22 +1,24 @@
+// src/grids/ActivitiesGrid.tsx
 import { useEffect, useState } from 'react';
 import ResultsGrid from './ResultsGrid';
-import { fetchResults } from '../api/resultsApi';
 import { ACTIVITIES_COLUMNS } from './columns/activities.columns';
+import type { ActivityRow } from '../types/rows/activity-row.type';
+import { fetchResults } from '../api/resultsApi';
 
 export default function ActivitiesGrid() {
-  const [rowData, setRowData] = useState([]);
+  const [rows, setRows] = useState<ActivityRow[]>([]);
 
   useEffect(() => {
-    fetchResults('activities').then(res => {
-      setRowData(res.data);
+    fetchResults('activities', 1, 25).then(res => {
+      setRows(res.data.rows);
     });
   }, []);
 
   return (
-    <ResultsGrid
+    <ResultsGrid<ActivityRow>
       columnDefs={ACTIVITIES_COLUMNS}
-      rowData={rowData}
-       storageKey="chembl:activities:columns"
+      rowData={rows}
+      storageKey="activities-grid"
     />
   );
 }

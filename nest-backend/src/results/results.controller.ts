@@ -7,8 +7,13 @@ export class ResultsController {
   constructor(private readonly resultsService: ResultsService) {}
 
   private getSessionId(req: Request): string {
-    const sid = req.cookies?.chembl_search_sid;
-    if (!sid) throw new Error('Search session not found');
+    const cookies = req.cookies as Record<string, unknown> | undefined;
+    const sid = cookies?.['chembl_search_sid'];
+
+    if (typeof sid !== 'string') {
+      throw new Error('Search session not found');
+    }
+
     return sid;
   }
 

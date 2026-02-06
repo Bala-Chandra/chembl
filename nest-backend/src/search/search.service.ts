@@ -63,95 +63,90 @@ export class SearchService {
   // 2️⃣ CREATE SEARCH SESSION (TEMP TABLE STRATEGY)
   // ---------------------------------------------------------------------------
 
-  async createSearchSession(chemblId: string): Promise<{ sessionId: string }> {
+  async createSearchSession(
+    category: SearchCategory,
+    value: string,
+  ): Promise<{ sessionId: string }> {
     const client = await this.pool.connect();
     const sessionId = randomUUID();
 
     try {
       await client.query('BEGIN');
 
-      // ---- TEMP STRUCTURES (base molecule) -------------------------------
+      // 1️⃣ TEMP ACTIVITIES (category-aware)
+      const whereClause = this.resolveActivityFilter(category);
+
       await client.query(
         `
-        CREATE TEMP TABLE temp_structures AS
-        SELECT
-          md.molregno,
-          md.chembl_id,
-          md.pref_name,
-          md.max_phase,
-          cs.canonical_smiles
-        FROM molecule_dictionary md
-        JOIN compound_structures cs
-          ON md.molregno = cs.molregno
-        WHERE md.chembl_id = $1;
-        `,
-        [chemblId],
+      CREATE TEMP TABLE temp_activities AS
+      SELECT
+        a.activity_id,
+        a.molregno,
+        a.assay_id,
+        a.doc_id,
+        a.standard_type,
+        a.standard_value,
+        a.standard_units
+      FROM activities a
+      WHERE ${whereClause};
+    `,
+        [value],
       );
 
-      await client.query(
-        `CREATE INDEX idx_temp_structures_molregno ON temp_structures (molregno);`,
-      );
-
-      // ---- TEMP ACTIVITIES (hub table) -----------------------------------
       await client.query(`
-        CREATE TEMP TABLE temp_activities AS
-        SELECT
-          a.activity_id,
-          a.molregno,
-          a.assay_id,
-          a.doc_id,
-          a.standard_type,
-          a.standard_value,
-          a.standard_units
-        FROM activities a
-        JOIN temp_structures ts
-          ON a.molregno = ts.molregno;
-      `);
+      CREATE INDEX idx_temp_activities_molregno ON temp_activities (molregno);
+      CREATE INDEX idx_temp_activities_assay_id ON temp_activities (assay_id);
+      CREATE INDEX idx_temp_activities_doc_id   ON temp_activities (doc_id);
+    `);
 
-      await client.query(
-        `CREATE INDEX idx_temp_activities_assay_id ON temp_activities (assay_id);`,
-      );
-      await client.query(
-        `CREATE INDEX idx_temp_activities_doc_id ON temp_activities (doc_id);`,
-      );
-
-      // ---- TEMP ASSAYS ----------------------------------------------------
+      // 2️⃣ TEMP STRUCTURES
       await client.query(`
-        CREATE TEMP TABLE temp_assays AS
-        SELECT DISTINCT
-          ass.assay_id,
-          ass.assay_type,
-          ass.description
-        FROM assays ass
-        JOIN temp_activities ta
-          ON ass.assay_id = ta.assay_id;
-      `);
+      CREATE TEMP TABLE temp_structures AS
+      SELECT DISTINCT
+        md.molregno,
+        md.chembl_id,
+        md.pref_name,
+        md.max_phase,
+        cs.canonical_smiles
+      FROM molecule_dictionary md
+      JOIN compound_structures cs ON md.molregno = cs.molregno
+      JOIN temp_activities ta     ON md.molregno = ta.molregno;
+    `);
 
-      // ---- TEMP DOCUMENTS -------------------------------------------------
+      // 3️⃣ TEMP DOCUMENTS
       await client.query(`
-        CREATE TEMP TABLE temp_documents AS
-        SELECT DISTINCT
-          d.doc_id,
-          d.pubmed_id,
-          d.year
-        FROM docs d
-        JOIN temp_activities ta
-          ON d.doc_id = ta.doc_id;
-      `);
+      CREATE TEMP TABLE temp_documents AS
+      SELECT DISTINCT
+        d.doc_id,
+        d.pubmed_id,
+        d.year,
+        d.journal
+      FROM docs d
+      JOIN temp_activities ta ON d.doc_id = ta.doc_id;
+    `);
+
+      // 4️⃣ TEMP ASSAYS
+      await client.query(`
+      CREATE TEMP TABLE temp_assays AS
+      SELECT DISTINCT
+        ass.assay_id,
+        ass.assay_type,
+        ass.description,
+        ass.assay_category
+      FROM assays ass
+      JOIN temp_activities ta ON ass.assay_id = ta.assay_id;
+    `);
 
       await client.query('COMMIT');
 
-      // Store session
       this.sessions.set(sessionId, client);
-
-      // Optional safety cleanup (10 min idle timeout)
       setTimeout(() => this.closeSession(sessionId), 10 * 60 * 1000);
 
       return { sessionId };
-    } catch (error) {
+    } catch (e) {
       await client.query('ROLLBACK');
       client.release();
-      throw error;
+      throw e;
     }
   }
 
@@ -280,13 +275,13 @@ export class SearchService {
 
       case 'target':
         return `a.assay_id IN (
-        SELECT ta.assay_id
-        FROM target_dictionary td
-        JOIN target_components tc ON td.tid = tc.tid
-        JOIN component_sequences cs ON tc.component_id = cs.component_id
-        JOIN target_assays ta ON ta.tid = td.tid
-        WHERE td.chembl_id = $1
-      )`;
+      SELECT ass.assay_id
+      FROM assays ass
+      JOIN target_dictionary td
+        ON ass.tid = td.tid
+      WHERE td.chembl_id = $1
+    )
+  `;
 
       case 'assay':
         return `a.assay_id = $1::int`;

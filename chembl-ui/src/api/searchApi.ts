@@ -13,8 +13,15 @@ export const fetchCounts = (category:SearchCategory, value: string, ) =>
 // -----------------------------
 // CREATE SEARCH SESSION
 // -----------------------------
-export const createSearchSession = (value: string) =>
-  api.post('/search/session', { value });
+export const createSearchSession = (
+  category: SearchCategory,
+  value: string,
+) =>
+  api.post('/search/session', {
+    category,
+    value,
+  });
+
 
 // -----------------------------
 // AUTOCOMPLETE

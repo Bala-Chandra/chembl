@@ -31,10 +31,11 @@ export class SearchController {
   // ------------------------------------------------------------------
   @Post('session')
   async createSession(
-    @Body() body: { value: string },
+    @Body() body: { category: SearchCategory; value: string },
     @Res({ passthrough: true }) res: Response,
   ) {
     const { sessionId } = await this.searchService.createSearchSession(
+      body.category,
       body.value,
     );
 

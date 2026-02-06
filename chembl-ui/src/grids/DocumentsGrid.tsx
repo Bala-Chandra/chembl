@@ -1,23 +1,24 @@
+// src/grids/DocumentsGrid.tsx
 import { useEffect, useState } from 'react';
 import ResultsGrid from './ResultsGrid';
-import { fetchResults } from '../api/resultsApi';
 import { DOCUMENTS_COLUMNS } from './columns/documents.columns';
+import type { DocumentRow } from '../types/rows/document-row.type';
+import { fetchResults } from '../api/resultsApi';
 
 export default function DocumentsGrid() {
-  const [rowData, setRowData] = useState([]);
+  const [rows, setRows] = useState<DocumentRow[]>([]);
 
   useEffect(() => {
-    fetchResults('documents').then(res => {
-      setRowData(res.data);
+    fetchResults('documents', 1, 25).then(res => {
+      setRows(res.data.rows);
     });
   }, []);
 
   return (
-    <ResultsGrid
+    <ResultsGrid<DocumentRow>
       columnDefs={DOCUMENTS_COLUMNS}
-      rowData={rowData}
-      storageKey="chembl:documents:columns"
+      rowData={rows}
+      storageKey="documents-grid"
     />
-
   );
 }
