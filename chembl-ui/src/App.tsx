@@ -1,7 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import AppLayout from './layout/AppLayout';
 import SearchPage from './pages/SearchPage';
-import ResultsPage from './pages/ResulstsPage';
+import ResultsPage from './pages/ResultsPage';
 
 export default function App() {
   return (

@@ -1,0 +1,23 @@
+.page {
+  width: 100%;
+  padding: 16px 24px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.tabs button {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  background: #e5e7eb;
+  cursor: pointer;
+}
+
+.tabs button.active {
+  background: #2563eb;
+  color: white;
+}

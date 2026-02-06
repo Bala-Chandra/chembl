@@ -1,11 +1,18 @@
 import { api } from './axios';
 
+export type ResultType =
+  | 'structures'
+  | 'documents'
+  | 'assays'
+  | 'activities';
+
 export const fetchResults = (
-  type: 'structures' | 'documents' | 'assays' | 'activities',
-  page: number,
-  pageSize: number
-) =>
-  api.post(`/results/${type}`, {
-    page,
-    pageSize,
+  type: ResultType,
+  page = 1,
+  pageSize = 25,
+) => {
+  return api.get(`/results/${type}`, {
+    params: { page, pageSize },
+    withCredentials: true, // 🔑 required for session cookie
   });
+};
