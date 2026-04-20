@@ -15,29 +15,41 @@ export class ResultsService {
   async getStructures(sessionId: string, page = 1, pageSize = 25) {
     const client = this.searchService.getSessionClient(sessionId);
     const offset = (page - 1) * pageSize;
+
     const sql = `
-      SELECT
-        ts.chembl_id,
-        ts.pref_name,
-        ts.max_phase,
-        cp.mw_freebase        AS mw,
-        cp.alogp,
-        cp.psa,
-        cp.hba,
-        cp.hbd,
-        cp.rtb,
-        cp.num_ro5_violations,
-        ts.canonical_smiles
-      FROM temp_structures ts
-      LEFT JOIN compound_properties cp
-        ON ts.molregno = cp.molregno
-      ORDER BY ts.chembl_id
-      LIMIT $1 OFFSET $2;
-    `;
+    SELECT
+      ts.chembl_id,
+      ts.pref_name,
+      ts.max_phase,
+      cp.mw_freebase        AS mw,
+      cp.alogp,
+      cp.psa,
+      cp.hba,
+      cp.hbd,
+      cp.rtb,
+      cp.num_ro5_violations,
+      ts.canonical_smiles,
+      COUNT(*) OVER() AS total_count   -- ✅ key addition
+    FROM temp_structures ts
+    LEFT JOIN compound_properties cp
+      ON ts.molregno = cp.molregno
+    ORDER BY ts.chembl_id
+    LIMIT $1 OFFSET $2;
+  `;
 
-    const result = await client.query<StructureRow>(sql, [pageSize, offset]);
+    const result = await client.query<StructureRow & { total_count: string }>(
+      sql,
+      [pageSize, offset],
+    );
 
-    return result.rows;
+    const rows = result.rows;
+
+    const total = rows.length > 0 ? Number(rows[0].total_count) : 0;
+
+    return {
+      rows,
+      total,
+    };
   }
 
   // ------------------------------------------------------------------
@@ -53,12 +65,25 @@ export class ResultsService {
       , d.pubmed_id
       , d.journal
       , d.year
+      , COUNT(*) OVER()::int AS total_count
     FROM temp_documents d
     ORDER BY d.year DESC NULLS LAST
     LIMIT $1 OFFSET $2;
   `;
 
-    return (await client.query<DocumentRow>(sql, [pageSize, offset])).rows;
+    const result = await client.query<DocumentRow & { total_count: string }>(
+      sql,
+      [pageSize, offset],
+    );
+
+    const rows = result.rows;
+
+    const total = rows.length > 0 ? Number(rows[0].total_count) : 0;
+
+    return {
+      rows,
+      total,
+    };
   }
 
   // ------------------------------------------------------------------
@@ -68,25 +93,36 @@ export class ResultsService {
     const client = this.searchService.getSessionClient(sessionId);
     const offset = (page - 1) * pageSize;
 
-    const sql = `SELECT
-          a.assay_id,
-          a.assay_type,
-          a.description,
-          a.assay_category,
-          td.chembl_id AS target_chembl_id,
-          td.pref_name AS target_name,
-          td.organism,
-          ass.relationship_type,
-          ass.bao_format
-        FROM temp_assays a
-        LEFT JOIN assays ass 
-          ON a.assay_id = ass.assay_id
-        LEFT JOIN target_dictionary td 
-          ON ass.tid = td.tid
-        ORDER BY a.assay_id
-        LIMIT $1 OFFSET $2;`;
+    const sql = `
+    SELECT
+      a.assay_id
+    , a.assay_type
+    , a.description
+    , a.assay_category
+    , td.chembl_id AS target_chembl_id
+    , td.pref_name AS target_name
+    , td.organism
+    , ass.relationship_type
+    , ass.bao_format
+    , COUNT(*) OVER()::int AS total_count
+    FROM temp_assays a
+    LEFT JOIN assays ass
+      ON a.assay_id = ass.assay_id
+    LEFT JOIN target_dictionary td
+      ON ass.tid = td.tid
+    ORDER BY a.assay_id
+    LIMIT $1 OFFSET $2;
+  `;
 
-    return (await client.query<AssayRow>(sql, [pageSize, offset])).rows;
+    const result = await client.query<AssayRow & { total_count: number }>(sql, [
+      pageSize,
+      offset,
+    ]);
+
+    const rows = result.rows;
+    const total = rows.length ? rows[0].total_count : 0;
+
+    return { rows, total };
   }
 
   // ------------------------------------------------------------------
@@ -104,7 +140,8 @@ export class ResultsService {
         ta.doc_id,
         ta.standard_type,
         ta.standard_value,
-        ta.standard_units
+        ta.standard_units,
+        COUNT(*) OVER()::int AS total_count
       FROM temp_activities ta
       JOIN temp_structures ts
         ON ta.molregno = ts.molregno
@@ -112,6 +149,14 @@ export class ResultsService {
       LIMIT $1 OFFSET $2;
     `;
 
-    return (await client.query<ActivityRow>(sql, [pageSize, offset])).rows;
+    const result = await client.query<ActivityRow & { total_count: number }>(
+      sql,
+      [pageSize, offset],
+    );
+
+    const rows = result.rows;
+    const total = rows.length ? rows[0].total_count : 0;
+
+    return { rows, total };
   }
 }

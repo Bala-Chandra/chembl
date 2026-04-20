@@ -1,24 +1,53 @@
 import { AgGridReact } from 'ag-grid-react';
-import type { ColDef, GridApi } from 'ag-grid-community';
-import { useRef, useState } from 'react';
+import type {
+  ColDef,
+  GridApi,
+  IGetRowsParams,
+} from 'ag-grid-community';
+import { useRef, useState, useMemo } from 'react';
 import ColumnChooser from '../components/ColumnChooser';
 
 interface Props<T> {
   columnDefs: ColDef[];
-  rowData: T[];
+  fetchData: (page: number, pageSize: number) => Promise<{
+    rows: T[];
+    total: number;
+  }>;
   storageKey: string;
   onGridReady?: (api: GridApi) => void;
 }
 
 export default function ResultsGrid<T>({
   columnDefs,
-  rowData,
+  fetchData,
   storageKey,
   onGridReady,
 }: Props<T>) {
   const apiRef = useRef<GridApi | null>(null);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const [showChooser, setShowChooser] = useState(false);
+
+  const pageSize = 25;
+
+  // ✅ datasource for infinite scrolling + pagination
+  const datasource = useMemo(() => {
+    return {
+      getRows: async (params: IGetRowsParams) => {
+        const page = params.startRow / pageSize + 1;
+
+        try {
+          const res = await fetchData(page, pageSize);
+
+          params.successCallback(
+            res.rows,
+            res.total // ✅ THIS enables correct total count in AG Grid
+          );
+        } catch {
+          params.failCallback();
+        }
+      },
+    };
+  }, [fetchData]);
 
   return (
     <div style={{ position: 'relative' }}>
@@ -38,7 +67,7 @@ export default function ResultsGrid<T>({
         </button>
       </div>
 
-      {/* Column chooser popup */}
+      {/* Column chooser */}
       {showChooser && gridApi && (
         <ColumnChooser
           gridApi={gridApi}
@@ -52,15 +81,22 @@ export default function ResultsGrid<T>({
       <div className="ag-theme-alpine" style={{ height: 600 }}>
         <AgGridReact<T>
           columnDefs={columnDefs}
-          rowData={rowData}
+
+          // ✅ IMPORTANT
+          rowModelType="infinite"
+          datasource={datasource}
+
           pagination
-          paginationPageSize={25}
+          paginationPageSize={pageSize}
+          cacheBlockSize={pageSize}
+
           suppressMovableColumns={false}
+
           onGridReady={params => {
             apiRef.current = params.api;
             setGridApi(params.api);
 
-            // Restore persisted column state
+            // Restore column state
             const saved = localStorage.getItem(storageKey);
             if (saved) {
               params.api.applyColumnState({
@@ -70,6 +106,12 @@ export default function ResultsGrid<T>({
             }
 
             onGridReady?.(params.api);
+          }}
+
+          // ✅ persist column order
+          onColumnMoved={params => {
+            const state = params.api.getColumnState();
+            localStorage.setItem(storageKey, JSON.stringify(state));
           }}
         />
       </div>
