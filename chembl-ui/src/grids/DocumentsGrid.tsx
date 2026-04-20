@@ -10,7 +10,7 @@ export default function DocumentsGrid() {
 
   useEffect(() => {
     fetchResults('documents', 1, 25).then(res => {
-      setRows(res.data.rows);
+      setRows(res.data);
     });
   }, []);
 

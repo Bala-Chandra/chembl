@@ -10,7 +10,7 @@ export default function ActivitiesGrid() {
 
   useEffect(() => {
     fetchResults('activities', 1, 25).then(res => {
-      setRows(res.data.rows);
+      setRows(res.data);
     });
   }, []);
 
