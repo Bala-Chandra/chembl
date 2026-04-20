@@ -1,7 +1,7 @@
 import type { ColDef } from "ag-grid-community";
 
 export const ACTIVITIES_COLUMNS: ColDef[] = [
-  { headerName: '⚗️', field: 'icon', width: 60 },
+  { headerName: '⚗️', field: 'icon', width: 60, suppressMovable: true, pinned: 'left' },
   { field: 'activity_id', headerName: 'Activity ID', pinned: 'left' },
   { field: 'chembl_id', headerName: 'Molecule ChEMBL ID' },
   { field: 'assay_id', headerName: 'Assay ID' },

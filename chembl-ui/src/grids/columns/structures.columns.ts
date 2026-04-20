@@ -6,6 +6,7 @@ export const STRUCTURES_COLUMNS: ColDef[] = [
     field: 'chembl_id',
     width: 70,
     cellRenderer: () => '🧬', // placeholder (no image yet)
+    suppressMovable: true, pinned: 'left'
   },
   { field: 'chembl_id', headerName: 'ChEMBL ID', pinned: 'left' },
   { field: 'pref_name', headerName: 'Name' },

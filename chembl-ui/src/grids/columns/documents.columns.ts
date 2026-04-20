@@ -1,7 +1,7 @@
 import type { ColDef } from "ag-grid-community";
 
 export const DOCUMENTS_COLUMNS: ColDef[] = [
-  { headerName: '📄', field: 'icon', width: 60 },
+  { headerName: '📄', field: 'icon', width: 60, suppressMovable: true, pinned: 'left' },
   { field: 'doc_id', headerName: 'Doc ID', pinned: 'left' },
   { field: 'pubmed_id', headerName: 'PubMed ID' },
   { field: 'journal', headerName: 'Journal' },

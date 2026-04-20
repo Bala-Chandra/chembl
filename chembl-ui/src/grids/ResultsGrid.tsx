@@ -55,7 +55,7 @@ export default function ResultsGrid<T>({
           rowData={rowData}
           pagination
           paginationPageSize={25}
-          suppressMovableColumns
+          suppressMovableColumns={false}
           onGridReady={params => {
             apiRef.current = params.api;
             setGridApi(params.api);

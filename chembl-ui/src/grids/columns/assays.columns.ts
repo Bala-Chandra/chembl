@@ -1,7 +1,7 @@
 import type { ColDef } from "ag-grid-community";
 
 export const ASSAYS_COLUMNS: ColDef[] = [
-  { headerName: '🧪', field: 'icon', width: 60 },
+  { headerName: '🧪', field: 'icon', width: 60, suppressMovable: true, pinned: 'left' },
   { field: 'assay_id', headerName: 'Assay ID', pinned: 'left' },
   { field: 'assay_type', headerName: 'Assay Type' },
   { field: 'description', headerName: 'Description' },
