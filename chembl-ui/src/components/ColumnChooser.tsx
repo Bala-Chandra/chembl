@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ColDef, GridApi } from 'ag-grid-community';
 import styles from './ColumnChooser.module.css';
 
@@ -17,6 +17,15 @@ export default function ColumnChooser({
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
 
+  // Initialize visibility state from the grid API
+  const [visibility, setVisibility] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(
+      columns
+        .filter(c => c.field)
+        .map(c => [c.field!, gridApi.getColumn(c.field!)?.isVisible() ?? true])
+    )
+  );
+
   // Close on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -29,16 +38,15 @@ export default function ColumnChooser({
   }, [onClose]);
 
   const toggle = (field: string) => {
-    const col = gridApi.getColumn(field);
-    if (!col) return;
+    const newVisible = !visibility[field];
 
-    const visible = col.isVisible();
-    gridApi.setColumnsVisible([field], !visible);
+    // Update grid
+    gridApi.setColumnsVisible([field], newVisible);
 
-    persist();
-  };
+    // Update local state → triggers re-render
+    setVisibility(prev => ({ ...prev, [field]: newVisible }));
 
-  const persist = () => {
+    // Persist to localStorage
     const state = gridApi.getColumnState();
     localStorage.setItem(storageKey, JSON.stringify(state));
   };
@@ -53,7 +61,7 @@ export default function ColumnChooser({
           <label key={col.field} className={styles.item}>
             <input
               type="checkbox"
-              checked={gridApi.getColumn(col.field!)?.isVisible()}
+              checked={visibility[col.field!] ?? true}
               onChange={() => toggle(col.field!)}
             />
             {col.headerName}
