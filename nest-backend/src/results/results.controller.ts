@@ -1,6 +1,7 @@
-import { Controller, Get, Query, Req } from '@nestjs/common';
+import { Controller, Get, Query, Req, UseGuards } from '@nestjs/common';
 import type { Request } from 'express';
 import { ResultsService } from './results.service';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 @Controller('results')
 export class ResultsController {
@@ -17,21 +18,25 @@ export class ResultsController {
     return sid;
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('structures')
   structures(@Req() req: Request, @Query('page') page = '1') {
     return this.resultsService.getStructures(this.getSessionId(req), +page);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('documents')
   documents(@Req() req: Request, @Query('page') page = '1') {
     return this.resultsService.getDocuments(this.getSessionId(req), +page);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('assays')
   assays(@Req() req: Request, @Query('page') page = '1') {
     return this.resultsService.getAssays(this.getSessionId(req), +page);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('activities')
   activities(@Req() req: Request, @Query('page') page = '1') {
     return this.resultsService.getActivities(this.getSessionId(req), +page);
