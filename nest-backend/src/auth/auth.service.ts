@@ -1,7 +1,17 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { Pool } from 'pg';
-import * as bcrypt from 'bcrypt';
+import bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+
+type UserRow = {
+  id: number;
+  email: string;
+  password_hash: string;
+};
+
+type RoleRow = {
+  name: string;
+};
 
 @Injectable()
 export class AuthService {
@@ -18,7 +28,7 @@ export class AuthService {
       WHERE u.email = $1 AND u.is_active = true
     `;
 
-    const result = await this.pool.query(sql, [email]);
+    const result = await this.pool.query<UserRow>(sql, [email]);
 
     if (result.rows.length === 0) {
       throw new UnauthorizedException('Invalid credentials');
@@ -33,7 +43,7 @@ export class AuthService {
     }
 
     // 🔹 Fetch roles
-    const rolesRes = await this.pool.query(
+    const rolesRes = await this.pool.query<RoleRow>(
       `
       SELECT r.name
       FROM auth.roles r
