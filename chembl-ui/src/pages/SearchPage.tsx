@@ -8,27 +8,40 @@ import type {
   SearchCounts as Counts,
   AutocompleteItem,
 } from '../types/search';
-import { fetchCounts, createSearchSession, fetchDefaultCounts } from '../api/searchApi';
+import {
+  fetchCounts,
+  createSearchSession,
+  fetchDefaultCounts,
+} from '../api/searchApi';
 import styles from './SearchPage.module.css';
+import { useSearch } from '../search/useSearch';
 
 export default function SearchPage() {
   const [category, setCategory] = useState<SearchCategory>('structure');
   const [selectedValue, setSelectedValue] = useState<string | null>(null);
-  const [counts, setCounts] = useState<Counts | null>(null);
+  const [countsLocal, setCountsLocal] = useState<Counts | null>(null);
+
+  const { setCounts } = useSearch(); // ✅ hook at top
+  const navigate = useNavigate();
 
   useEffect(() => {
-  fetchDefaultCounts()
-    .then(res => setCounts(res.data))
-    .catch(() => setCounts(null));
-}, []);
-
-
-  const navigate = useNavigate();
+    fetchDefaultCounts()
+      .then(res => {
+        setCountsLocal(res.data);
+        setCounts(res.data);
+      })
+      .catch(() => {
+        setCountsLocal(null);
+        setCounts(null);
+      });
+  }, [setCounts]);
 
   const onSelect = async (item: AutocompleteItem) => {
     setSelectedValue(item.value);
 
     const res = await fetchCounts(category, item.value);
+
+    setCountsLocal(res.data);
     setCounts(res.data);
   };
 
@@ -49,6 +62,7 @@ export default function SearchPage() {
           onChange={v => {
             setCategory(v);
             setSelectedValue(null);
+            setCountsLocal(null);
             setCounts(null);
           }}
         />
@@ -67,7 +81,7 @@ export default function SearchPage() {
         </button>
       </div>
 
-      {counts && <SearchCounts counts={counts} />}
+      {countsLocal && <SearchCounts counts={countsLocal} />}
     </div>
   );
 }

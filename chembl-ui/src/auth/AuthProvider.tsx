@@ -20,10 +20,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('user', JSON.stringify(data.user));
   };
 
-  const logout = () => {
+  const logout = async () => {
+
+    try {
+      await fetch('/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
     setUser(null);
     setToken(null);
     localStorage.clear();
+    window.location.href = '/login';
   };
 
   return (

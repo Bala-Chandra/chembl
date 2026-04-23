@@ -44,3 +44,48 @@
   color: #334155;
 }
 
+
+/* Header layout */
+.header {
+  height: 56px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* 🔥 important */
+  background: #0f172a;
+  color: white;
+}
+
+/* Left side */
+.headerLeft {
+  display: flex;
+  align-items: center;
+}
+
+/* Right side */
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Email */
+.userEmail {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+/* Logout button */
+.logoutBtn {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 6px;
+  background: #ef4444;
+  color: white;
+  cursor: pointer;
+}
+
+.logoutBtn:hover {
+  background: #dc2626;
+}
+
